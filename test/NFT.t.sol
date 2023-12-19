@@ -7,12 +7,14 @@ import "../src/NFT.sol"; // Update the import path as needed
 contract NFTTest is Test {
     NFT nft;
     address recipient = address(0x123);
+    address constant initialOwner = 0x63A32F1595a68E811496D820680B74A5ccA303c5;
 
     function setUp() public {
         nft = new NFT("TestNFT", "TNFT", "https://example.com/");
     }
 
     function testMintTo() public {
+        vm.prank(initialOwner); // Simulate transaction from initial owner
         uint256 tokenId = nft.mintTo(recipient);
         assertEq(
             nft.ownerOf(tokenId),
@@ -22,6 +24,7 @@ contract NFTTest is Test {
     }
 
     function testTokenURI() public {
+        vm.prank(initialOwner); // Simulate transaction from initial owner
         uint256 tokenId = nft.mintTo(recipient);
         string memory expectedURI = string(
             abi.encodePacked("https://example.com/", Strings.toString(tokenId))
@@ -35,6 +38,7 @@ contract NFTTest is Test {
 
     function testWithdrawPayments() public {
         // Setup: Mint a token to ensure there's some balance in the contract
+        vm.prank(initialOwner); // Simulate transaction from initial owner
         nft.mintTo(recipient);
 
         // Simulate sending ether to the contract (if needed)
@@ -45,6 +49,7 @@ contract NFTTest is Test {
         address payable payee = payable(address(this));
         uint256 payeeBalanceBefore = payee.balance;
 
+        vm.prank(initialOwner); // Simulate transaction from initial owner
         nft.withdrawPayments(payee);
 
         uint256 contractBalanceAfter = address(nft).balance;
