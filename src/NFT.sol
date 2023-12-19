@@ -12,6 +12,7 @@ error WithdrawTransfer();
 
 contract NFT is ERC721, Ownable {
     using Strings for uint256;
+
     string public baseURI;
     uint256 public currentTokenId;
     uint256 public constant TOTAL_SUPPLY = 10_000;
@@ -21,7 +22,7 @@ contract NFT is ERC721, Ownable {
         string memory _name,
         string memory _symbol,
         string memory _baseURI
-    ) ERC721(_name, _symbol) {
+    ) ERC721(_name, _symbol) Ownable() {
         baseURI = _baseURI;
     }
 
