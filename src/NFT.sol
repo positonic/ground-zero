@@ -5,7 +5,6 @@ import "solmate/tokens/ERC721.sol";
 import "openzeppelin-contracts/contracts/utils/Strings.sol";
 import "openzeppelin-contracts/contracts/access/Ownable.sol";
 
-error MintPriceNotPaid();
 error MaxSupply();
 error NonExistentTokenURI();
 error WithdrawTransfer();
@@ -16,7 +15,6 @@ contract NFT is ERC721, Ownable {
     string public baseURI;
     uint256 public currentTokenId;
     uint256 public constant TOTAL_SUPPLY = 10_000;
-    uint256 public constant MINT_PRICE = 0.08 ether;
 
     constructor(
         string memory _name,
@@ -26,10 +24,7 @@ contract NFT is ERC721, Ownable {
         baseURI = _baseURI;
     }
 
-    function mintTo(address recipient) public payable returns (uint256) {
-        if (msg.value != MINT_PRICE) {
-            revert MintPriceNotPaid();
-        }
+    function mintTo(address recipient) public returns (uint256) {
         uint256 newTokenId = ++currentTokenId;
         if (newTokenId > TOTAL_SUPPLY) {
             revert MaxSupply();
