@@ -26,9 +26,21 @@ contract IncomeTracker is Ownable {
     FundsRaised public fundsRaised;
     Income public income;
 
-    constructor(string memory _initialOwner) {
+    // Evaluator address (hardcoded)
+    address public evaluator;
+    address public constant INITIAL_OWNER =
+        0x63A32F1595a68E811496D820680B74A5ccA303c5;
+
+    constructor(address _evaluator) Ownable(INITIAL_OWNER) {
         // Initial setup can be done here if required
-        transferOwnership(_initialOwner);
+        //transferOwnership(_initialOwner);
+        evaluator = _evaluator;
+    }
+
+    // Modifier to restrict access to Evaluator only
+    modifier onlyEvaluator() {
+        require(msg.sender == evaluator, "IT: Not an Evaluator");
+        _;
     }
 
     // Setters for updating income streams
@@ -38,21 +50,21 @@ contract IncomeTracker is Ownable {
         uint256 _alloV2,
         uint256 _celo,
         uint256 _octant
-    ) external onlyOwner {
+    ) external onlyEvaluator {
         donations = Donation(_giveth, _gitcoin, _alloV2, _celo, _octant);
     }
 
     function setFundsRaised(
         uint256 _usv,
         uint256 _hyperspeed
-    ) external onlyOwner {
+    ) external onlyEvaluator {
         fundsRaised = FundsRaised(_usv, _hyperspeed);
     }
 
     function setIncome(
         uint256 _year2022,
         uint256 _year2023
-    ) external onlyOwner {
+    ) external onlyEvaluator {
         income = Income(_year2022, _year2023);
     }
 

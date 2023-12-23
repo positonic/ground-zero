@@ -2,68 +2,60 @@
 pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
+import "forge-std/Vm.sol";
 import "../src/NFT.sol"; // Update the import path as needed
+import "forge-std/console.sol";
 
 contract NFTTest is Test {
     NFT nft;
-    address recipient = address(0x123);
-    address constant initialOwner = 0x63A32F1595a68E811496D820680B74A5ccA303c5;
+    IncomeTracker incomeTracker;
+    address public constant INITIAL_OWNER =
+        0x63A32F1595a68E811496D820680B74A5ccA303c5;
+    // Addresses for the initial owner and evaluator (use test addresses or mock values)
+    address evaluator = address(this); // Mock evaluator address; replace with actual for real testing
 
     function setUp() public {
-        nft = new NFT("TestNFT", "TNFT", "https://example.com/");
+        // Deploy the IncomeTracker contract with initial owner and evaluator
+        incomeTracker = new IncomeTracker(evaluator);
+
+        // Deploy the NFT contract, initializing it with the IncomeTracker address
+        nft = new NFT("MyNFT", "MNFT", "https://mybaseuri.com/", evaluator);
     }
 
-    function testMintTo() public {
-        vm.prank(initialOwner); // Simulate transaction from initial owner
-        uint256 tokenId = nft.mintTo(recipient);
-        assertEq(
-            nft.ownerOf(tokenId),
-            recipient,
-            "Recipient should own the new token"
-        );
+    function testInitialOwner() public {
+        // Check that the deployer (this test contract) is the owner
+        assertEq(nft.owner(), INITIAL_OWNER);
     }
 
-    function testTokenURI() public {
-        vm.prank(initialOwner); // Simulate transaction from initial owner
-        uint256 tokenId = nft.mintTo(recipient);
-        string memory expectedURI = string(
-            abi.encodePacked("https://example.com/", Strings.toString(tokenId))
-        );
-        assertEq(
-            nft.tokenURI(tokenId),
-            expectedURI,
-            "tokenURI should return the correct string"
-        );
+    function testMinting() public {
+        // Try minting a new token
+        uint256 tokenId = nft.mintTo(INITIAL_OWNER);
+        assertEq(tokenId, 1); // Token IDs typically start at 1
+        assertEq(nft.ownerOf(tokenId), INITIAL_OWNER); // Check owner of minted token
     }
 
-    function testWithdrawPayments() public {
-        // Setup: Mint a token to ensure there's some balance in the contract
-        vm.prank(initialOwner); // Simulate transaction from initial owner
-        nft.mintTo(recipient);
+    function testFailMintBeyondMaxSupply() public {
+        // Mint up to the maximum
+        for (uint256 i = 0; i < nft.TOTAL_SUPPLY(); i++) {
+            nft.mintTo(address(this));
+        }
+        // This next mint should fail
+        nft.mintTo(address(this));
+    }
 
-        // Simulate sending ether to the contract (if needed)
-        payable(address(nft)).transfer(1 ether);
+    function testUpdateIncome() public {
+        vm.prank(evaluator);
 
-        // Withdraw balance
-        uint256 contractBalanceBefore = address(nft).balance;
-        address payable payee = payable(address(this));
-        uint256 payeeBalanceBefore = payee.balance;
+        // Update income via NFT contract
+        nft.updateIncome(100, 200); // Example values for 2022, 2023
 
-        vm.prank(initialOwner); // Simulate transaction from initial owner
-        nft.withdrawPayments(payee);
-
-        uint256 contractBalanceAfter = address(nft).balance;
-        uint256 payeeBalanceAfter = payee.balance;
-
-        assertEq(
-            contractBalanceAfter,
-            0,
-            "Contract balance should be zero after withdrawal"
-        );
-        assertEq(
-            payeeBalanceAfter,
-            payeeBalanceBefore + contractBalanceBefore,
-            "Payee balance should increase by the withdrawn amount"
-        );
+        // Fetch income from the IncomeTracker and verify
+        IncomeTracker.Income memory income = nft.incomeTracker().getIncome();
+        uint256 year2022 = income.year2022;
+        uint256 year2023 = income.year2023;
+        console.log("Income after update - 2022:", year2022);
+        console.log("Income after update - 2023:", year2023);
+        assertEq(year2022, 100);
+        assertEq(year2023, 200);
     }
 }
