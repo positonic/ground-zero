@@ -67,6 +67,15 @@ contract NFT is ERC721, Ownable {
         _;
     }
 
+    // Modifier that requires the current caller to be the owner of the token.
+    modifier onlyTokenOwner(uint256 tokenId) {
+        require(
+            ownerOf(tokenId) == msg.sender,
+            "Caller is not the token owner"
+        );
+        _;
+    }
+
     // Interaction functions with IncomeTracker (Optional: For direct access from NFT contract)
     function updateDonations(
         uint256 _giveth,
@@ -74,21 +83,21 @@ contract NFT is ERC721, Ownable {
         uint256 _alloV2,
         uint256 _celo,
         uint256 _octant
-    ) external onlyEvaluator {
+    ) external onlyEvaluator onlyTokenOwner(tokenId) {
         incomeTracker.setDonations(_giveth, _gitcoin, _alloV2, _celo, _octant);
     }
 
     function updateFundsRaised(
         uint256 _usv,
         uint256 _hyperspeed
-    ) external onlyEvaluator {
+    ) external onlyEvaluator onlyTokenOwner(tokenId) {
         incomeTracker.setFundsRaised(_usv, _hyperspeed);
     }
 
     function updateIncome(
         uint256 _year2022,
         uint256 _year2023
-    ) external onlyEvaluator {
+    ) external onlyEvaluator onlyTokenOwner(tokenId) c {
         incomeTracker.setIncome(_year2022, _year2023);
     }
 }

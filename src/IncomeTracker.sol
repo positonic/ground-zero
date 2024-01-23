@@ -4,6 +4,9 @@ pragma solidity >=0.8.20;
 import "openzeppelin-contracts/contracts/access/Ownable.sol";
 
 contract IncomeTracker is Ownable {
+    // Mapping from token ID to its donations
+    mapping(uint256 => Donation) public projectDonations;
+
     struct Donation {
         uint256 giveth;
         uint256 gitcoin;
@@ -44,14 +47,26 @@ contract IncomeTracker is Ownable {
     }
 
     // Setters for updating income streams
-    function setDonations(
+    function updateDonations(
+        uint256 tokenId,
         uint256 _giveth,
         uint256 _gitcoin,
         uint256 _alloV2,
         uint256 _celo,
         uint256 _octant
     ) external onlyEvaluator {
-        donations = Donation(_giveth, _gitcoin, _alloV2, _celo, _octant);
+        require(
+            _exists(tokenId),
+            "ERC721: operator query for nonexistent token"
+        );
+        // Add more checks as necessary, e.g., only owner or approved can update
+        tokenDonations[tokenId] = Donation(
+            _giveth,
+            _gitcoin,
+            _alloV2,
+            _celo,
+            _octant
+        );
     }
 
     function setFundsRaised(
